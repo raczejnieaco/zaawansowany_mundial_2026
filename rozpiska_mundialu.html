@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundial 2026 - Oficjalny Monitor</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #1a365d; margin-bottom: 25px; }
+        
+        /* Nawigacja */
+        .menu { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; flex-wrap: wrap; }
+        .menu-btn { background: #edf2f7; color: #4a5568; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .menu-btn.active { background: #0066cc; color: white; }
+        .menu-btn:hover { background: #cbd5e0; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Tabele */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background-color: #1a365d; color: white; font-size: 13px; text-transform: uppercase; }
+        
+        /* Styl flag */
+        .team-box { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; }
+        .flag-wrapper { display: inline-block; width: 30px; height: 20px; text-align: center; }
+        .flag { width: 100%; height: 100%; object-fit: contain; border: none; background: transparent; box-sizing: border-box; }
+
+        .score-box { text-align: center; font-weight: bold; font-size: 16px; white-space: nowrap; padding: 0 10px; }
+        .score-badge { background: #edf2f7; padding: 5px 12px; border-radius: 4px; display: inline-block; min-width: 40px; text-align: center; }
+        
+        .stats-table th { background-color: #2d3748; text-align: center; }
+        .stats-table td { text-align: center; }
+        .stats-table td.team-name { text-align: left; font-weight: bold; }
+
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .group-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; }
+        .group-title { font-size: 18px; color: #1a365d; margin-top: 0; border-bottom: 2px solid #0066cc; padding-bottom: 5px; }
+
+        /* Drabinka pucharowa */
+        .bracket-container { display: flex; flex-direction: column; gap: 20px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; overflow-x: auto; }
+        .stage-title { background: #2d3748; color: white; padding: 8px; font-weight: bold; border-radius: 4px; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; }
+        .bracket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .match-card { background: white; border: 1px solid #cbd5e0; border-radius: 6px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .match-card-header { font-size: 11px; color: #718096; margin-bottom: 6px; font-weight: bold; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .bracket-team { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; font-weight: 500; align-items: center; }
+        .bracket-score { font-weight: bold; background: #edf2f7; padding: 1px 6px; border-radius: 3px; min-width: 15px; text-align: center; }
+        .placeholder { color: #a0aec0; font-style: italic; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏆 Monitor Mistrzostw Świata 2026</h1>
+
+    <div class="menu">
+        <button class="menu-btn active" onclick="switchSec('chron', this)">📅 Harmonogram i Wyniki</button>
+        <button class="menu-btn" onclick="switchSec('tables', this)">📊 Tabele Grupowe (Live)</button>
+        <button class="menu-btn" onclick="switchSec('groups-matches', this)">🗂️ Mecze w Grupach</button>
+        <button class="menu-btn" onclick="switchSec('knockout', this)">🔥 Faza Pucharowa</button>
+    </div>
+
+    <div id="chron" class="section active">
+        <h2>Harmonogram meczów fazy grupowej (Dzień po Dniu)</h2>
+        <table id="matches-timeline">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">Data i godzina</th>
+                    <th style="text-align: right; width: 28%;">Gospodarz</th>
+                    <th style="text-align: center; width: 14%;">Wynik</th>
+                    <th style="text-align: left; width: 28%;">Gość</th>
+                    <th style="width: 10%;">Grupa / Miejsce</th>
+                </tr>
+            </thead>
+            <tbody id="timeline-body"></tbody>
+        </table>
+    </div>
+
+    <div id="tables" class="section">
+        <h2>Aktualna klasyfikacja punktowa (Grupy A-L)</h2>
+        <div class="grid-layout" id="groups-tables-container"></div>
+        
+        <hr style="margin: 40px 0; border: 1px solid #e2e8f0;">
+        
+        <h2>📊 Tabela 3. miejsc (Top 8 awansuje)</h2>
+        <div id="third-places-container" style="max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;"></div>
+    </div>
+
+    <div id="groups-matches" class="section">
+        <h2>Terminarze poszczególnych grup</h2>
+        <div class="grid-layout" id="groups-matches-container"></div>
+    </div>
+
+    <div id="knockout" class="section">
+        <h2>Faza Pucharowa MŚ 2026 (1/16 Finału generuje się automatycznie*)</h2>
+        <p style="font-size: 13px; color: #4a5568; margin-top: -10px; margin-bottom: 20px;">
+            *Uwaga: Miejsca oznaczone jako <strong>"3. miejsce"</strong> uzupełniasz ręcznie w kodzie (pole <code>manualThirdPlace</code>) po oficjalnym komunikacie FIFA o losowaniu par pucharowych.
+        </p>
+        <div class="bracket-container">
+            <div class="stage-title">1/16 Finału</div>
+            <div class="bracket-grid" id="ro32-grid"></div>
+
+            <div class="stage-title">1/8 Finału</div>
+            <div class="bracket-grid" id="ro16-grid"></div>
+
+            <div class="stage-title">Ćwierćfinały</div>
+            <div class="bracket-grid" id="qf-grid"></div>
+
+            <div class="stage-title">Półfinały, Mecz o 3. miejsce i Finał</div>
+            <div class="bracket-grid" id="final-grid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const flagMapping = {
+        "Meksyk": "mx", "RPA": "za", "Korea Południowa": "kr", "Czechy": "cz",
+        "Kanada": "ca", "Bośnia i Hercegowina": "ba", "USA": "us", "Paragwaj": "py",
+        "Katar": "qa", "Szwajcaria": "ch", "Brazylia": "br", "Maroko": "ma",
+        "Haiti": "ht", "Szkocja": "sc", "Australia": "au", "Turcja": "tr",
+        "Niemcy": "de", "Curacao": "cw", "Holandia": "nl", "Japonia": "jp",
+        "Wybrzeże Kości Słoniowej": "ci", "WKS": "ci", "Ekwador": "ec", "Szwecja": "se",
+        "Tunezja": "tn", "Hiszpania": "es", "Republika Zielonego Przylądka": "cv",
+        "Belgia": "be", "Egipt": "eg", "Arabia Saudyjska": "sa", "Urugwaj": "uy",
+        "Iran": "ir", "Nowa Zelandia": "nz", "Francja": "fr", "Senegal": "sn",
+        "Irak": "iq", "Norwegia": "no", "Argentyna": "ar", "Algieria": "dz",
+        "Austria": "at", "Jordania": "jo", "Portugalia": "pt", "DR Konga": "cd",
+        "Anglia": "en", "Chorwacja": "hr", "Ghana": "gh", "Panama": "pa",
+        "Uzbekistan": "uz", "Kolumbia": "co"
+    };
+
+    const initialMatches = [
+        { id: 1, date: "11 czerwca, 21:00", home: "Meksyk", away: "RPA", group: "A", location: "Mexico City", homeScore: 2, awayScore: 0 },
+        { id: 2, date: "12 czerwca, 04:00", home: "Korea Południowa", away: "Czechy", group: "A", location: "Guadalajara", homeScore: null, awayScore: null },
+        { id: 3, date: "12 czerwca, 21:00", home: "Kanada", away: "Bośnia i Hercegowina", group: "B", location: "Toronto", homeScore: null, awayScore: null },
+        { id: 4, date: "13 czerwca, 03:00", home: "USA", away: "Paragwaj", group: "D", location: "Los Angeles", homeScore: null, awayScore: null },
+        { id: 5, date: "13 czerwca, 21:00", home: "Katar", away: "Szwajcaria", group: "B", location: "Santa Clara", homeScore: null, awayScore: null },
+        { id: 6, date: "14 czerwca, 00:00", home: "Brazylia", away: "Maroko", group: "C", location: "New Jersey", homeScore: null, awayScore: null },
+        { id: 7, date: "14 czerwca, 03:00", home: "Haiti", away: "Szkocja", group: "C", location: "Boston", homeScore: null, awayScore: null },
+        { id: 8, date: "14 czerwca, 06:00", home: "Australia", away: "Turcja", group: "D", location: "Vancouver", homeScore: null, awayScore: null },
+        { id: 9, date: "14 czerwca, 19:00", home: "Niemcy", away: "Curacao", group: "E", location: "Houston", homeScore: null, awayScore: null },
+        { id: 10, date: "14 czerwca, 22:00", home: "Holandia", away: "Japonia", group: "F", location: "Dallas", homeScore: null, awayScore: null },
+        { id: 11, date: "15 czerwca, 01:00", home: "Wybrzeże Kości Słoniowej", away: "Ekwador", group: "E", location: "Filadelfia", homeScore: null, awayScore: null },
+        { id: 12, date: "15 czerwca, 04:00", home: "Szwecja", away: "Tunezja", group: "F", location: "Monterrey", homeScore: null, awayScore: null },
+        { id: 13, date: "15 czerwca, 18:00", home: "Hiszpania", away: "Republika Zielonego Przylądka", group: "H", location: "Atlanta", homeScore: null, awayScore: null },
+        { id: 14, date: "15 czerwca, 21:00", home: "Belgia", away: "Egipt", group: "G", location: "Seattle", homeScore: null, awayScore: null },
+        { id: 15, date: "16 czerwca, 00:00", home: "Arabia Saudyjska", away: "Urugwaj", group: "H", location: "Miami", homeScore: null, awayScore: null },
+        { id: 16, date: "16 czerwca, 03:00", home: "Iran", away: "Nowa Zelandia", group: "G", location: "Los Angeles", homeScore: null, awayScore: null },
+        { id: 17, date: "16 czerwca, 21:00", home: "Francja", away: "Senegal", group: "I", location: "New Jersey", homeScore: null, awayScore: null },
+        { id: 18, date: "17 czerwca, 00:00", home: "Irak", away: "Norwegia", group: "I", location: "Boston", homeScore: null, awayScore: null },
+        { id: 19, date: "17 czerwca, 03:00", home: "Argentyna", away: "Algieria", group: "J", location: "Kansas City", homeScore: null, awayScore: null },
+        { id: 20, date: "17 czerwca, 06:00", home: "Austria", away: "Jordania", group: "J", location: "Santa Clara", homeScore: null, awayScore: null },
+        { id: 21, date: "17 czerwca, 19:00", home: "Portugalia", away: "DR Konga", group: "K", location: "Houston", homeScore: null, awayScore: null },
+        { id: 22, date: "17 czerwca, 22:00", home: "Anglia", away: "Chorwacja", group: "L", location: "Dallas", homeScore: null, awayScore: null },
+        { id: 23, date: "18 czerwca, 1:00", home: "Ghana", away: "Panama", group: "L", location: "Boston", homeScore: null, awayScore: null },
+        { id: 24, date: "18 czerwca, 4:00", home: "Uzbekistan", away: "Kolumbia", group: "K", location: "Mexico City", homeScore: null, awayScore: null },
+        { id: 25, date: "18 czerwca, 18:00", home: "Czechy", away: "RPA", group: "A", location: "Atlanta", homeScore: null, awayScore: null },
+        { id: 26, date: "18 czerwca, 21:00", home: "Szwajcaria", away: "Bośnia i Hercegowina", group: "B", location: "Los Angeles", homeScore: null, awayScore: null },
+        { id: 27, date: "19 czerwca, 00:00", home: "Kanada", away: "Katar", group: "B", location: "Vancouver", homeScore: null, awayScore: null },
+        { id: 28, date: "19 czerwca, 3:00", home: "Meksyk", away: "Korea Południowa", group: "A", location: "Guadalajara", homeScore: null, awayScore: null },
+        { id: 29, date: "19 czerwca, 21:00", home: "USA", away: "Australia", group: "D", location: "Seattle", homeScore: null, awayScore: null },
+        { id: 30, date: "20 czerwca, 00:00", home: "Szkocja", away: "Maroko", group: "C", location: "Boston", homeScore: null, awayScore: null },
+        { id: 31, date: "20 czerwca, 3:00", home: "Brazylia", away: "Haiti", group: "C", location: "Filadelfia", homeScore: null, awayScore: null },
+        { id: 32, date: "20 czerwca, 5:00", home: "Turcja", away: "Paragwaj", group: "D", location: "Santa Clara", homeScore: null, awayScore: null },
+        { id: 33, date: "20 czerwca, 19:00", home: "Holandia", away: "Szwecja", group: "F", location: "Houston", homeScore: null, awayScore: null },
+        { id: 34, date: "20 czerwca, 22:00", home: "Niemcy", away: "WKS", group: "E", location: "Toronto", homeScore: null, awayScore: null },
+        { id: 35, date: "21 czerwca, 2:00", home: "Ekwador", away: "Curacao", group: "E", location: "Kansas City", homeScore: null, awayScore: null },
+        { id: 36, date: "21 czerwca, 6:00", home: "Tunezja", away: "Japonia", group: "F", location: "Monterrey", homeScore: null, awayScore: null },
+        { id: 37, date: "21 czerwca, 18:00", home: "Hiszpania", away: "Arabia Saudyjska", group: "H", location: "Atlanta", homeScore: null, awayScore: null },
+        { id: 38, date: "21 czerwca, 21:00", home: "Belgia", away: "Iran", group: "G", location: "Los Angeles", homeScore: null, awayScore: null },
+        { id: 39, date: "22 czerwca, 00:00", home: "Urugwaj", away: "Republika Zielonego Przylądka", group: "H", location: "Miami", homeScore: null, awayScore: null },
+        { id: 40, date: "22 czerwca, 3:00", home: "Nowa Zelandia", away: "Egipt", group: "G", location: "Vancouver", homeScore: null, awayScore: null },
+        { id: 41, date: "22 czerwca, 19:00", home: "Argentyna", away: "Austria", group: "J", location: "Dallas", homeScore: null, awayScore: null },
+        { id: 42, date: "22 czerwca, 23:00", home: "Francja", away: "Irak", group: "I", location: "Filadelfia", homeScore: null, awayScore: null },
+        { id: 43, date: "23 czerwca, 2:00", home: "Norwegia", away: "Senegal", group: "I", location: "New Jersey", homeScore: null, awayScore: null },
+        { id: 44, date: "23 czerwca, 5:00", home: "Jordania", away: "Algieria", group: "J", location: "Santa Clara", homeScore: null, awayScore: null },
+        { id: 45, date: "23 czerwca, 19:00", home: "Portugalia", away: "Uzbekistan", group: "K", location: "Houston", homeScore: null, awayScore: null },
+        { id: 46, date: "23 czerwca, 22:00", home: "Anglia", away: "Ghana", group: "L", location: "Boston", homeScore: null, awayScore: null },
+        { id: 47, date: "24 czerwca, 1:00", home: "Panama", away: "Chorwacja", group: "L", location: "Toronto", homeScore: null, awayScore: null },
+        { id: 48, date: "24 czerwca, 4:00", home: "Kolumbia", away: "DR Konga", group: "K", location: "Guadalajara", homeScore: null, awayScore: null },
+        { id: 49, date: "24 czerwca, 21:00", home: "Szwajcaria", away: "Kanada", group: "B", location: "Vancouver", homeScore: null, awayScore: null },
+        { id: 50, date: "24 czerwca, 21:00", home: "Bośnia i Hercegowina", away: "Katar", group: "B", location: "Seattle", homeScore: null, awayScore: null },
+        { id: 51, date: "25 czerwca, 00:00", home: "Maroko", away: "Haiti", group: "C", location: "Atlanta", homeScore: null, awayScore: null },
+        { id: 52, date: "25 czerwca, 00:00", home: "Szkocja", away: "Brazylia", group: "C", location: "Miami", homeScore: null, awayScore: null },
+        { id: 53, date: "25 czerwca, 3:00", home: "RPA", away: "Korea Południowa", group: "A", location: "Monterrey", homeScore: null, awayScore: null },
+        { id: 54, date: "25 czerwca, 3:00", home: "Czechy", away: "Meksyk", group: "A", location: "Mexico City", homeScore: null, awayScore: null },
+        { id: 55, date: "25 czerwca, 22:00", home: "Curacao", away: "WKS", group: "E", location: "Filadelfia", homeScore: null, awayScore: null },
+        { id: 56, date: "25 czerwca, 22:00", home: "Ekwador", away: "Niemcy", group: "E", location: "New Jersey", homeScore: null, awayScore: null },
+        { id: 57, date: "26 czerwca, 1:00", home: "Japonia", away: "Szwecja", group: "F", location: "Dallas", homeScore: null, awayScore: null },
+        { id: 58, date: "26 czerwca, 1:00", home: "Tunezja", away: "Holandia", group: "F", location: "Kansas City", homeScore: null, awayScore: null },
+        { id: 59, date: "26 czerwca, 4:00", home: "Paragwaj", away: "Australia", group: "D", location: "Santa Clara", homeScore: null, awayScore: null },
+        { id: 60, date: "26 czerwca, 4:00", home: "Turcja", away: "USA", group: "D", location: "Los Angeles", homeScore: null, awayScore: null },
+        { id: 61, date: "26 czerwca, 21:00", home: "Norwegia", away: "Francja", group: "I", location: "Boston", homeScore: null, awayScore: null },
+        { id: 62, date: "26 czerwca, 21:00", home: "Senegal", away: "Irak", group: "I", location: "Toronto", homeScore: null, awayScore: null },
+        { id: 63, date: "27 czerwca, 2:00", home: "Republika Zielonego Przylądka", away: "Arabia Saudyjska", group: "H", location: "Houston", homeScore: null, awayScore: null },
+        { id: 64, date: "27 czerwca, 2:00", home: "Urugwaj", away: "Hiszpania", group: "H", location: "Guadalajara", homeScore: null, awayScore: null },
+        { id: 65, date: "27 czerwca, 5:00", home: "Egipt", away: "Iran", group: "G", location: "Seattle", homeScore: null, awayScore: null },
+        { id: 66, date: "27 czerwca, 5:00", home: "Nowa Zelandia", away: "Belgia", group: "G", location: "Vancouver", homeScore: null, awayScore: null },
+        { id: 67, date: "27 czerwca, 23:00", home: "Chorwacja", away: "Ghana", group: "L", location: "Filadelfia", homeScore: null, awayScore: null },
+        { id: 68, date: "27 czerwca, 23:00", home: "Panama", away: "Anglia", group: "L", location: "New Jersey", homeScore: null, awayScore: null },
+        { id: 69, date: "28 czerwca, 1:30", home: "DR Konga", away: "Uzbekistan", group: "K", location: "Atlanta", homeScore: null, awayScore: null },
+        { id: 70, date: "28 czerwca, 1:30", home: "Kolumbia", away: "Portugalia", group: "K", location: "Miami", homeScore: null, awayScore: null },
+        { id: 71, date: "28 czerwca, 4:00", home: "Algieria", away: "Austria", group: "J", location: "Kansas City", homeScore: null, awayScore: null },
+        { id: 72, date: "28 czerwca, 4:00", home: "Jordania", away: "Argentyna", group: "J", location: "Dallas", homeScore: null, awayScore: null }
+    ];
+
+    // DEFINICJA STRUKTURY DRABINKI PUCHAROWEJ
+    // 'homeSource' oraz 'awaySource' wskazują, kto automatycznie wchodzi do meczu.
+    // Jeśli pozycja to trzecie miejsce, wpisujemy '3rd', a skrypt pobierze wartość z pola 'manualThirdPlace'.
+    const knockoutMatches = {
+        ro32_1:  { date: "28.06, 21:00", label: "Los Angeles", homeSource: "1A", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_2:  { date: "29.06, 19:00", label: "Houston", homeSource: "1E", awaySource: "2A", hS: null, aS: null }, 
+        ro32_3:  { date: "29.06, 22:30", label: "Boston (#1)", homeSource: "1I", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_4:  { date: "30.06, 03:00", label: "Monterrey", homeSource: "2F", awaySource: "2C", hS: null, aS: null },
+        ro32_5:  { date: "30.06, 19:00", label: "Dallas", homeSource: "1C", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_6:  { date: "30.06, 23:00", label: "New Jersey (#1)", homeSource: "1K", awaySource: "2E", hS: null, aS: null },
+        ro32_7:  { date: "01.07, 03:00", label: "Mexico City", homeSource: "1H", awaySource: "2J", hS: null, aS: null },
+        ro32_8:  { date: "01.07, 18:00", label: "Atlanta", homeSource: "1D", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_9:  { date: "01.07, 22:00", label: "Seattle (#6)", homeSource: "1G", awaySource: "2A", hS: null, aS: null },
+        ro32_10: { date: "02.07, 02:00", label: "Santa Clara (#6)", homeSource: "1J", awaySource: "2H", hS: null, aS: null },
+        ro32_11: { date: "02.07, 21:00", label: "Los Angeles (#5)", homeSource: "1B", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_12: { date: "03.07, 01:00", label: "Toronto (#5)", homeSource: "1L", awaySource: "2E", hS: null, aS: null },
+        ro32_13: { date: "03.07, 05:00", label: "Vancouver (#8)", homeSource: "1F", awaySource: "3rd", manualThirdPlace: null, hS: null, aS: null },
+        ro32_14: { date: "03.07, 20:00", label: "Arlington (#7)", homeSource: "2I", awaySource: "2D", hS: null, aS: null },
+        ro32_15: { date: "04.07, 00:00", label: "Miami (#7)", homeSource: "2G", awaySource: "2B", hS: null, aS: null },
+        ro32_16: { date: "04.07, 3:30",  label: "Kansas City (#8)", homeSource: "2K", awaySource: "2L", hS: null, aS: null },
+
+        // 1/8 FINAŁU
+        ro16_2: { date: "04.07, 19:00", label: "#2 Houston", hS: null, aS: null },
+        ro16_1: { date: "04.07, 23:00", label: "#1 Filadelfia", hS: null, aS: null },
+        ro16_3: { date: "05.07, 22:00", label: "#3 East Rutherford", hS: null, aS: null },
+        ro16_4: { date: "06.07, 02:00", label: "#4 Mexico City", hS: null, aS: null },
+        ro16_5: { date: "06.07, 21:00", label: "#5 Dallas", hS: null, aS: null },
+        ro16_6: { date: "07.07, 02:00", label: "#6 Seattle", hS: null, aS: null },
+        ro16_7: { date: "07.07, 18:00", label: "#7 Atlanta", hS: null, aS: null },
+        ro16_8: { date: "07.07, 22:00", label: "#8 Vancouver", hS: null, aS: null },
+
+        // ĆWIERĆFINAŁY
+        qf_1: { date: "09.07, 22:00", label: "#1 Boston", hS: null, aS: null },
+        qf_2: { date: "10.07, 21:00", label: "#2 Los Angeles", hS: null, aS: null },
+        qf_3: { date: "11.07, 23:00", label: "#3 Miami", hS: null, aS: null },
+        qf_4: { date: "12.07, 03:00", label: "#4 Kansas City", hS: null, aS: null },
+
+        // PÓŁFINAŁY
+        sf_1: { date: "14.07, 21:00", label: "Dallas", hS: null, aS: null },
+        sf_2: { date: "15.07, 21:00", label: "Atlanta", hS: null, aS: null },
+
+        // FINAŁY
+        match_3rd: { date: "18.07, 23:00", label: "Miami", hS: null, aS: null },
+        final:     { date: "19.07, 21:00", label: "New Jersey", hS: null, aS: null }
+    };
+
+    // Słownik przechowujący aktualne wyniki grup (Lider, Wicelider)
+    let groupWinnersLive = {};
+
+    function getFlag(teamName) {
+        if (!teamName || teamName.includes('.') || teamName.includes('/') || teamName.match(/[0-9]/)) return 'flagi/unknown.png';
+        const code = flagMapping[teamName] || "unknown";
+        return `flagi/${code}.png`;
+    }
+
+    function getWinner(match) {
+        if (match.hS === null || match.aS === null) return null;
+        return match.hS > match.aS ? match.t1 : match.t2;
+    }
+
+    function getLoser(match) {
+        if (match.hS === null || match.aS === null) return null;
+        return match.hS > match.aS ? match.t2 : match.t1;
+    }
+
+    function resolveSourceTeam(sourceStr, matchObj) {
+        if (sourceStr === "3rd") {
+            return matchObj.manualThirdPlace ? matchObj.manualThirdPlace : "3. miejsce";
+        }
+        if (groupWinnersLive[sourceStr]) {
+            return groupWinnersLive[sourceStr];
+        }
+        // Opis techniczny, jeśli brak rozegranych meczów
+        const pos = sourceStr[0] === "1" ? "Lider" : "Wicelider";
+        return `${pos} Gr. ${sourceStr[1]}`;
+    }
+
+    function processKnockoutLogic() {
+        const k = knockoutMatches;
+        
+        // KROK 1: Wyciągnięcie automatycznych drużyn dla 1/16 Finału z grup Live
+        for (let i = 1; i <= 16; i++) {
+            const m = k[`ro32_${i}`];
+            m.t1 = resolveSourceTeam(m.homeSource, m);
+            m.t2 = resolveSourceTeam(m.awaySource, m);
+        }
+
+        // KROK 2: Automatyczny awans do 1/8 Finału
+        k.ro16_2.t1 = getWinner(k.ro32_1) || "Zwycięzca Mecz 1";
+        k.ro16_2.t2 = getWinner(k.ro32_4) || "Zwycięzca Mecz 4";
+        
+        k.ro16_1.t1 = getWinner(k.ro32_3) || "Zwycięzca Mecz 3";
+        k.ro16_1.t2 = getWinner(k.ro32_6) || "Zwycięzca Mecz 6";
+
+        k.ro16_3.t1 = getWinner(k.ro32_2) || "Zwycięzca Mecz 2";
+        k.ro16_3.t2 = getWinner(k.ro32_5) || "Zwycięzca Mecz 5";
+
+        k.ro16_4.t1 = getWinner(k.ro32_7) || "Zwycięzca Mecz 7";
+        k.ro16_4.t2 = getWinner(k.ro32_8) || "Zwycięzca Mecz 8";
+
+        k.ro16_5.t1 = getWinner(k.ro32_12) || "Zwycięzca Mecz 12";
+        k.ro16_5.t2 = getWinner(k.ro32_11) || "Zwycięzca Mecz 11";
+
+        k.ro16_6.t1 = getWinner(k.ro32_10) || "Zwycięzca Mecz 10";
+        k.ro16_6.t2 = getWinner(k.ro32_9) || "Zwycięzca Mecz 9";
+
+        k.ro16_7.t1 = getWinner(k.ro32_15) || "Zwycięzca Mecz 15";
+        k.ro16_7.t2 = getWinner(k.ro32_14) || "Zwycięzca Mecz 14";
+
+        k.ro16_8.t1 = getWinner(k.ro32_13) || "Zwycięzca Mecz 13";
+        k.ro16_8.t2 = getWinner(k.ro32_16) || "Zwycięzca Mecz 16";
+
+        // KROK 3: ĆWIERĆFINAŁY
+        k.qf_1.t1 = getWinner(k.ro16_1) || "Zwycięzca #1";
+        k.qf_1.t2 = getWinner(k.ro16_2) || "Zwycięzca #2";
+
+        k.qf_2.t1 = getWinner(k.ro16_5) || "Zwycięzca #5";
+        k.qf_2.t2 = getWinner(k.ro16_6) || "Zwycięzca #6";
+
+        k.qf_3.t1 = getWinner(k.ro16_3) || "Zwycięzca #3";
+        k.qf_3.t2 = getWinner(k.ro16_4) || "Zwycięzca #4";
+
+        k.qf_4.t1 = getWinner(k.ro16_7) || "Zwycięzca #7";
+        k.qf_4.t2 = getWinner(k.ro16_8) || "Zwycięzca #8";
+
+        // KROK 4: PÓŁFINAŁY
+        k.sf_1.t1 = getWinner(k.qf_1) || "Zwycięzca ĆF #1";
+        k.sf_1.t2 = getWinner(k.qf_2) || "Zwycięzca ĆF #2";
+
+        k.sf_2.t1 = getWinner(k.qf_3) || "Zwycięzca ĆF #3";
+        k.sf_2.t2 = getWinner(k.qf_4) || "Zwycięzca ĆF #4";
+
+        // KROK 5: FINAŁ I 3. MIEJSCE
+        k.match_3rd.t1 = getLoser(k.sf_1) || "Przegrany Półfinału 1";
+        k.match_3rd.t2 = getLoser(k.sf_2) || "Przegrany Półfinału 2";
+
+        k.final.t1 = getWinner(k.sf_1) || "Zwycięzca Półfinału 1";
+        k.final.t2 = getWinner(k.sf_2) || "Zwycięzca Półfinału 2";
+    }
+
+    function createCardHtml(m) {
+        const score1 = m.hS !== null ? m.hS : "-";
+        const score2 = m.aS !== null ? m.aS : "-";
+        
+        const isPlaceholder1 = m.t1.includes('Lider') || m.t1.includes('miejsce') || m.t1.includes('Zwycięzca');
+        const isPlaceholder2 = m.t2.includes('Wicelider') || m.t2.includes('miejsce') || m.t2.includes('Zwycięzca');
+
+        return `
+            <div class="match-card">
+                <div class="match-card-header">${m.date} - ${m.label}</div>
+                <div class="bracket-team">
+                    <span class="team-box">
+                        <span class="flag-wrapper"><img src="${getFlag(m.t1)}" class="flag" onerror="this.style.display='none'"></span>
+                        <span class="${isPlaceholder1 ? 'placeholder' : ''}">${m.t1}</span>
+                    </span>
+                    <span class="bracket-score">${score1}</span>
+                </div>
+                <div class="bracket-team">
+                    <span class="team-box">
+                        <span class="flag-wrapper"><img src="${getFlag(m.t2)}" class="flag" onerror="this.style.display='none'"></span>
+                        <span class="${isPlaceholder2 ? 'placeholder' : ''}">${m.t2}</span>
+                    </span>
+                    <span class="bracket-score">${score2}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderBracket() {
+        processKnockoutLogic();
+        const k = knockoutMatches;
+
+        // 1/16 FINAŁU
+        let h32 = "";
+        for(let i=1; i<=16; i++) { h32 += createCardHtml(k[`ro32_${i}`]); }
+        document.getElementById('ro32-grid').innerHTML = h32;
+
+        // 1/8 FINAŁU
+        let h16 = "";
+        ["ro16_2", "ro16_1", "ro16_3", "ro16_4", "ro16_5", "ro16_6", "ro16_7", "ro16_8"].forEach(id => {
+            h16 += createCardHtml(k[id]);
+        });
+        document.getElementById('ro16-grid').innerHTML = h16;
+
+        // ĆWIERĆFINAŁY
+        let hqf = "";
+        for(let i=1; i<=4; i++) { hqf += createCardHtml(k[`qf_${i}`]); }
+        document.getElementById('qf-grid').innerHTML = hqf;
+
+        // FINAŁY
+        document.getElementById('final-grid').innerHTML = `
+            ${createCardHtml(k.sf_1)}
+            ${createCardHtml(k.sf_2)}
+            <div style="margin-top: 10px; border-top: 2px dashed #cbd5e0; padding-top:10px;">
+                ${createCardHtml(k.match_3rd)}
+            </div>
+            <div style="margin-top: 10px; border: 2px solid #e53e3e; border-radius: 6px;">
+                ${createCardHtml(k.final)}
+            </div>
+        `;
+    }
+
+    function renderTimeline() {
+        const tbody = document.getElementById('timeline-body');
+        tbody.innerHTML = '';
+        initialMatches.forEach(m => {
+            const scoreDisplay = (m.homeScore !== null && m.awayScore !== null) ? `${m.homeScore} : ${m.awayScore}` : " - ";
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${m.date}</strong></td>
+                    <td style="text-align: right;">
+                        <span class="team-box" style="flex-direction: row-reverse;">
+                            <span class="flag-wrapper"><img src="${getFlag(m.home)}" class="flag" onerror="this.style.display='none'"></span>
+                            <span>${m.home}</span>
+                        </span>
+                    </td>
+                    <td class="score-box"><span class="score-badge">${scoreDisplay}</span></td>
+                    <td style="text-align: left;">
+                        <span class="team-box">
+                            <span class="flag-wrapper"><img src="${getFlag(m.away)}" class="flag" onerror="this.style.display='none'"></span>
+                            <span>${m.away}</span>
+                        </span>
+                    </td>
+                    <td><small>Grupa ${m.group}<br>${m.location}</small></td>
+                </tr>
+            `;
+        });
+    }
+
+    function calculateTables() {
+        const groups = {};
+        initialMatches.forEach(m => {
+            if (!groups[m.group]) groups[m.group] = {};
+            if (!groups[m.group][m.home]) groups[m.group][m.home] = { name: m.home, m: 0, pkt: 0, gZ: 0, gS: 0, gr: m.group };
+            if (!groups[m.group][m.away]) groups[m.group][m.away] = { name: m.away, m: 0, pkt: 0, gZ: 0, gS: 0, gr: m.group };
+            
+            if (m.homeScore !== null && m.awayScore !== null) {
+                const h = groups[m.group][m.home];
+                const a = groups[m.group][m.away];
+                h.m++; a.m++;
+                h.gZ += m.homeScore; h.gS += m.awayScore;
+                a.gZ += m.awayScore; a.gS += m.homeScore;
+                if (m.homeScore > m.awayScore) { h.pkt += 3; }
+                else if (m.homeScore < m.awayScore) { a.pkt += 3; }
+                else { h.pkt += 1; a.pkt += 1; }
+            }
+        });
+
+        const container = document.getElementById('groups-tables-container');
+        container.innerHTML = '';
+
+        const thirdPlaceTeams = [];
+        groupWinnersLive = {}; // Resetujemy globalny stan zwycięzców grup przed przeliczeniem
+
+        Object.keys(groups).sort().forEach(groupName => {
+            const teams = groups[groupName];
+            const sortedTeams = Object.values(teams).sort((x, y) => y.pkt - x.pkt || (y.gZ - y.gS) - (x.gZ - x.gS) || y.gZ - x.gZ);
+            
+            // Zapisujemy pozycje 1 i 2 do mapy automatycznego rozstawienia pucharowego
+            if(sortedTeams[0]) groupWinnersLive[`1${groupName}`] = sortedTeams[0].name;
+            if(sortedTeams[1]) groupWinnersLive[`2${groupName}`] = sortedTeams[1].name;
+
+            if(sortedTeams[2]) {
+                thirdPlaceTeams.push(sortedTeams[2]);
+            }
+
+            let tableHtml = `
+                <div class="group-card">
+                    <h3 class="group-title">Grupa ${groupName}</h3>
+                    <table class="stats-table">
+                        <thead><tr><th style="text-align:left;">Kraj</th><th>M</th><th>Bil</th><th>Pkt</th></tr></thead>
+                        <tbody>
+            `;
+            sortedTeams.forEach(t => {
+                tableHtml += `
+                    <tr>
+                        <td class="team-name">
+                            <span class="team-box">
+                                <span class="flag-wrapper"><img src="${getFlag(t.name)}" class="flag" onerror="this.style.display='none'"></span>
+                                <span>${t.name}</span>
+                            </span>
+                        </td>
+                        <td>${t.m}</td>
+                        <td>${t.gZ}:${t.gS}</td>
+                        <td><strong>${t.pkt}</strong></td>
+                    </tr>
+                `;
+            });
+            tableHtml += `</tbody></table></div>`;
+            container.innerHTML += tableHtml;
+        });
+
+        // Tabela 3. Miejsc
+        thirdPlaceTeams.sort((x, y) => y.pkt - x.pkt || (y.gZ - y.gS) - (x.gZ - x.gS) || y.gZ - x.gZ);
+
+        let thirdHtml = `
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Poz</th>
+                        <th style="text-align:left;">Kraj (Grupa)</th>
+                        <th>M</th>
+                        <th>Bilans</th>
+                        <th>Pkt</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        thirdPlaceTeams.forEach((t, index) => {
+            const position = index + 1;
+            const rowBg = position <= 8 ? 'rgba(72, 187, 120, 0.15)' : 'rgba(229, 62, 62, 0.05)';
+            const badgeColor = position <= 8 ? '#2f855a' : '#c53030';
+
+            thirdHtml += `
+                <tr style="background-color: ${rowBg};">
+                    <td><span style="font-weight:bold; color: ${badgeColor};">${position}.</span></td>
+                    <td class="team-name">
+                        <span class="team-box">
+                            <span class="flag-wrapper"><img src="${getFlag(t.name)}" class="flag" onerror="this.style.display='none'"></span>
+                            <span>${t.name} <small style="color:#718096;">(Gr. ${t.gr})</small></span>
+                        </span>
+                    </td>
+                    <td>${t.m}</td>
+                    <td>${t.gZ}:${t.gS}</td>
+                    <td><strong>${t.pkt}</strong></td>
+                </tr>
+            `;
+        });
+
+        thirdHtml += `</tbody></table>`;
+        document.getElementById('third-places-container').innerHTML = thirdHtml;
+    }
+
+    function renderGroupsMatches() {
+        const container = document.getElementById('groups-matches-container');
+        container.innerHTML = '';
+        const matchesByGroup = {};
+        
+        initialMatches.forEach(m => {
+            if(!matchesByGroup[m.group]) matchesByGroup[m.group] = [];
+            matchesByGroup[m.group].push(m);
+        });
+
+        Object.keys(matchesByGroup).sort().forEach(groupName => {
+            const matches = matchesByGroup[groupName];
+            let html = `
+                <div class="group-card">
+                    <h3 class="group-title">Mecze Grupy ${groupName}</h3>
+                    <table style="font-size: 13px;">
+                        <tbody>
+            `;
+            matches.forEach(m => {
+                const score = (m.homeScore !== null) ? `${m.homeScore}:${m.awayScore}` : "-";
+                html += `
+                    <tr>
+                        <td style="padding: 6px 0; color:#718096;">${m.date.split(',')[0]}</td>
+                        <td style="text-align:right; padding: 6px 2px;">${m.home}</td>
+                        <td style="text-align:center; font-weight:bold; background:#edf2f7; padding: 2px 6px; border-radius:3px;">${score}</td>
+                        <td style="text-align:left; padding: 6px 2px;">${m.away}</td>
+                    </tr>
+                `;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function switchSec(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+        
+        // Jeśli wchodzimy do sekcji pucharowej, wymuszamy przeliczenie drabinki na bazie najświeższych tabel
+        if(id === 'knockout') {
+            renderBracket();
+        }
+    }
+
+    window.onload = function() {
+        renderTimeline();
+        calculateTables();
+        renderGroupsMatches();
+        renderBracket();
+    };
+</script>
+
+</body>
+</html>
