@@ -293,12 +293,12 @@
             m.t2 = resolveSourceTeam(m.awaySource, m);
         }
 
-        // KROK 2: Automatyczny awans do 1/8 Finału
-        k.ro16_2.t1 = getWinner(k.ro32_1) || "Zwycięzca Mecz 1";
-        k.ro16_2.t2 = getWinner(k.ro32_4) || "Zwycięzca Mecz 4";
-        
+        // KROK 2: Automatyczny awans do 1/8 Finału ze zwycięzców 1/16 Finału
         k.ro16_1.t1 = getWinner(k.ro32_3) || "Zwycięzca Mecz 3";
         k.ro16_1.t2 = getWinner(k.ro32_6) || "Zwycięzca Mecz 6";
+
+        k.ro16_2.t1 = getWinner(k.ro32_1) || "Zwycięzca Mecz 1";
+        k.ro16_2.t2 = getWinner(k.ro32_4) || "Zwycięzca Mecz 4";
 
         k.ro16_3.t1 = getWinner(k.ro32_2) || "Zwycięzca Mecz 2";
         k.ro16_3.t2 = getWinner(k.ro32_5) || "Zwycięzca Mecz 5";
@@ -318,7 +318,7 @@
         k.ro16_8.t1 = getWinner(k.ro32_13) || "Zwycięzca Mecz 13";
         k.ro16_8.t2 = getWinner(k.ro32_16) || "Zwycięzca Mecz 16";
 
-        // KROK 3: ĆWIERĆFINAŁY
+        // KROK 3: ĆWIERĆFINAŁY (Zwycięzcy z 1/8 Finału)
         k.qf_1.t1 = getWinner(k.ro16_1) || "Zwycięzca #1";
         k.qf_1.t2 = getWinner(k.ro16_2) || "Zwycięzca #2";
 
@@ -331,21 +331,20 @@
         k.qf_4.t1 = getWinner(k.ro16_7) || "Zwycięzca #7";
         k.qf_4.t2 = getWinner(k.ro16_8) || "Zwycięzca #8";
 
-        // KROK 4: PÓŁFINAŁY
+        // KROK 4: PÓŁFINAŁY (Zwycięzcy z Ćwierćfinałów)
         k.sf_1.t1 = getWinner(k.qf_1) || "Zwycięzca ĆF #1";
         k.sf_1.t2 = getWinner(k.qf_2) || "Zwycięzca ĆF #2";
 
         k.sf_2.t1 = getWinner(k.qf_3) || "Zwycięzca ĆF #3";
         k.sf_2.t2 = getWinner(k.qf_4) || "Zwycięzca ĆF #4";
 
-        // KROK 5: FINAŁ I 3. MIEJSCE
+        // KROK 5: FINAŁ I MECZ O 3. MIEJSCE
         k.match_3rd.t1 = getLoser(k.sf_1) || "Przegrany Półfinału 1";
         k.match_3rd.t2 = getLoser(k.sf_2) || "Przegrany Półfinału 2";
 
         k.final.t1 = getWinner(k.sf_1) || "Zwycięzca Półfinału 1";
         k.final.t2 = getWinner(k.sf_2) || "Zwycięzca Półfinału 2";
     }
-
     function createCardHtml(m) {
         const score1 = m.hS !== null ? m.hS : "-";
         const score2 = m.aS !== null ? m.aS : "-";
