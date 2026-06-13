@@ -384,9 +384,7 @@
 
         // 1/8 FINAŁU
         let h16 = "";
-        ["ro16_2", "ro16_1", "ro16_3", "ro16_4", "ro16_5", "ro16_6", "ro16_7", "ro16_8"].forEach(id => {
-            h16 += createCardHtml(k[id]);
-        });
+        for(let i=1; i<=8; i++) { h16 += createCardHtml(k[`ro16_${i}`]); }
         document.getElementById('ro16-grid').innerHTML = h16;
 
         // ĆWIERĆFINAŁY
