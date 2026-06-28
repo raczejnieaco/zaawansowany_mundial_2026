@@ -288,11 +288,11 @@
         const k = knockoutMatches;
         
         // KROK 1: Wyciągnięcie automatycznych drużyn dla 1/16 Finału z grup Live
-        for (let i = 1; i <= 16; i++) {
-            const m = k[`ro32_${i}`];
-            m.t1 = resolveSourceTeam(m.homeSource, m);
-            m.t2 = resolveSourceTeam(m.awaySource, m);
-        }
+        //for (let i = 1; i <= 16; i++) {
+          //  const m = k[`ro32_${i}`];
+            //m.t1 = resolveSourceTeam(m.homeSource, m);
+            //m.t2 = resolveSourceTeam(m.awaySource, m);
+        //}
 
         // KROK 2: Automatyczny awans do 1/8 Finału ze zwycięzców 1/16 Finału
         k.ro16_1.t1 = getWinner(k.ro32_3) || "Zwycięzca Mecz 3";
