@@ -211,14 +211,14 @@
     // Jeśli pozycja to trzecie miejsce, wpisujemy '3rd', a skrypt pobierze wartość z pola 'manualThirdPlace'.
     const knockoutMatches = {
         // 1/16 FINAŁU (Mecze 73 - 88 wpisane na sztywno zgodnie z oficjalnym terminarzem)
-        ro32_1:  { date: "28.06, 21:00", label: "Mecz 73 - Los Angeles", t1: "RPA", t2: "Kanada", hS: null, aS: null },
-        ro32_2:  { date: "29.06, 19:00", label: "Mecz 76 - Houston", t1: "Brazylia", t2: "Japonia", hS: null, aS: null }, 
-        ro32_3:  { date: "29.06, 22:30", label: "Mecz 74 - Boston", t1: "Niemcy", t2: "Paragwaj", hS: null, aS: null },
-        ro32_4:  { date: "30.06, 03:00", label: "Mecz 75 - Monterrey", t1: "Holandia", t2: "Maroko", hS: null, aS: null },
-        ro32_5:  { date: "30.06, 19:00", label: "Mecz 78 - Dallas", t1: "WKS", t2: "Norwegia", hS: null, aS: null },
-        ro32_6:  { date: "30.06, 23:00", label: "Mecz 77 - New Jersey", t1: "Francja", t2: "Szwecja", hS: null, aS: null },
-        ro32_7:  { date: "01.07, 03:00", label: "Mecz 79 - Mexico City", t1: "Meksyk", t2: "Ekwador", hS: null, aS: null },
-        ro32_8:  { date: "01.07, 18:00", label: "Mecz 80 - Atlanta", t1: "Anglia", t2: "DR Konga", hS: null, aS: null },
+        ro32_1:  { date: "28.06, 21:00", label: "Mecz 73 - Los Angeles", t1: "RPA", t2: "Kanada", hS: 0, aS: 1 },
+        ro32_2:  { date: "29.06, 19:00", label: "Mecz 76 - Houston", t1: "Brazylia", t2: "Japonia", hS: 2, aS: 1 }, 
+        ro32_3:  { date: "29.06, 22:30", label: "Mecz 74 - Boston", t1: "Niemcy", t2: "Paragwaj", hS: 1, aS: 1, hP: 3, aP: 4 },
+        ro32_4:  { date: "30.06, 03:00", label: "Mecz 75 - Monterrey", t1: "Holandia", t2: "Maroko", hS: 1, aS: 1, hP: 2, aP: 3 },
+        ro32_5:  { date: "30.06, 19:00", label: "Mecz 78 - Dallas", t1: "WKS", t2: "Norwegia", hS: 1, aS: 2 },
+        ro32_6:  { date: "30.06, 23:00", label: "Mecz 77 - New Jersey", t1: "Francja", t2: "Szwecja", hS: 3, aS: 0 },
+        ro32_7:  { date: "01.07, 03:00", label: "Mecz 79 - Mexico City", t1: "Meksyk", t2: "Ekwador", hS: 2, aS: 0 },
+        ro32_8:  { date: "01.07, 18:00", label: "Mecz 80 - Atlanta", t1: "Anglia", t2: "DR Konga", hS: 2, aS: 1 },
         ro32_9:  { date: "01.07, 22:00", label: "Mecz 82 - Seattle", t1: "Belgia", t2: "Senegal", hS: null, aS: null },
         ro32_10: { date: "02.07, 02:00", label: "Mecz 81 - Santa Clara", t1: "USA", t2: "Bośnia i Hercegowina", hS: null, aS: null },
         ro32_11: { date: "02.07, 21:00", label: "Mecz 84 - Los Angeles", t1: "Hiszpania", t2: "Austria", hS: null, aS: null },
@@ -264,12 +264,26 @@
 
     function getWinner(match) {
         if (match.hS === null || match.aS === null) return null;
-        return match.hS > match.aS ? match.t1 : match.t2;
+        if (match.hS > match.aS) return match.t1;
+        if (match.hS < match.aS) return match.t2;
+        
+        // Jeśli jest remis w bramkach, sprawdzamy karne (hP i aP)
+        if (match.hP !== null && match.aP !== null) {
+            return match.hP > match.aP ? match.t1 : match.t2;
+        }
+        return null; // Remis, ale karne jeszcze niewpisane
     }
 
     function getLoser(match) {
         if (match.hS === null || match.aS === null) return null;
-        return match.hS > match.aS ? match.t2 : match.t1;
+        if (match.hS > match.aS) return match.t2;
+        if (match.hS < match.aS) return match.t1;
+        
+        // Jeśli jest remis w bramkach, sprawdzamy karne
+        if (match.hP !== null && match.aP !== null) {
+            return match.hP > match.aP ? match.t2 : match.t1;
+        }
+        return null;
     }
 
     function resolveSourceTeam(sourceStr, matchObj) {
@@ -347,8 +361,12 @@
         k.final.t2 = getWinner(k.sf_2) || "Zwycięzca Półfinału 2";
     }
     function createCardHtml(m) {
-        const score1 = m.hS !== null ? m.hS : "-";
-        const score2 = m.aS !== null ? m.aS : "-";
+        // Zamień zmienne score1 i score2 na te wersje:
+        const penalty1 = m.hP !== null ? ` (${m.hP})` : "";
+        const penalty2 = m.aP !== null ? ` (${m.aP})` : "";
+
+        const score1 = m.hS !== null ? `${m.hS}${penalty1}` : "-";
+        const score2 = m.aS !== null ? `${m.aS}${penalty2}` : "-";
         
         const isPlaceholder1 = m.t1.includes('Lider') || m.t1.includes('miejsce') || m.t1.includes('Zwycięzca');
         const isPlaceholder2 = m.t2.includes('Wicelider') || m.t2.includes('miejsce') || m.t2.includes('Zwycięzca');
