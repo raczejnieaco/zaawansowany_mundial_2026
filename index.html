@@ -48,6 +48,25 @@
         .bracket-team { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; font-weight: 500; align-items: center; }
         .bracket-score { font-weight: bold; background: #edf2f7; padding: 1px 6px; border-radius: 3px; min-width: 15px; text-align: center; }
         .placeholder { color: #a0aec0; font-style: italic; font-size: 12px; }
+
+        /* Styl dla wiersza zwycięzcy ze złotym podświetleniem */
+        .bracket-team.winner-row {
+            background: rgba(255, 191, 0, 0.1) !important; /* Delikatne złote tło */
+            border: 2px solid #ffd700 !important;          /* Złota ramka */
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);   /* Efekt świecenia (neon) */
+            border-radius: 6px;                            /* Zaokrąglenie rogów ramki */
+            font-weight: bold;                             /* Pogrubienie tekstu zwycięzcy */
+        }
+
+/* Zapewnia płynne przejście i ładny układ wiersza */
+        .bracket-team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            margin: 2px 0;
+            border: 2px solid transparent; /* Rezerwacja miejsca na ramkę, by karta nie skakała */
+        }
     </style>
 </head>
 <body>
@@ -361,7 +380,7 @@
         k.final.t2 = getWinner(k.sf_2) || "Zwycięzca Półfinału 2";
     }
     function createCardHtml(m) {
-        // Zamień zmienne score1 i score2 na te wersje:
+        // Sprawdzamy rzuty karne
         const penalty1 = m.hP !== null ? ` (${m.hP})` : "";
         const penalty2 = m.aP !== null ? ` (${m.aP})` : "";
 
@@ -371,17 +390,31 @@
         const isPlaceholder1 = m.t1.includes('Lider') || m.t1.includes('miejsce') || m.t1.includes('Zwycięzca');
         const isPlaceholder2 = m.t2.includes('Wicelider') || m.t2.includes('miejsce') || m.t2.includes('Zwycięzca');
 
+        // Ustalamy, kto wygrał ten konkretny mecz
+        const winner = getWinner(m);
+        
+        // Jeśli jest zwycięzca i nazwa drużyny się zgadza, przypisujemy klasę 'winner-row'
+        const winnerClass1 = (winner && winner === m.t1) ? "winner-row" : "";
+        const winnerClass2 = (winner && winner === m.t2) ? "winner-row" : "";
+
+        const logoUrl = "logo.png"; // Twoje logo w nagłówku
+
         return `
             <div class="match-card">
-                <div class="match-card-header">${m.date} - ${m.label}</div>
-                <div class="bracket-team">
+                <div class="match-card-header" style="display: flex; align-items: center; gap: 6px;">
+                    <img src="${logoUrl}" style="height: 14px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
+                    <span>${m.date} - ${m.label}</span>
+                </div>
+                
+                <div class="bracket-team ${winnerClass1}">
                     <span class="team-box">
                         <span class="flag-wrapper"><img src="${getFlag(m.t1)}" class="flag" onerror="this.style.display='none'"></span>
                         <span class="${isPlaceholder1 ? 'placeholder' : ''}">${m.t1}</span>
                     </span>
                     <span class="bracket-score">${score1}</span>
                 </div>
-                <div class="bracket-team">
+                
+                <div class="bracket-team ${winnerClass2}">
                     <span class="team-box">
                         <span class="flag-wrapper"><img src="${getFlag(m.t2)}" class="flag" onerror="this.style.display='none'"></span>
                         <span class="${isPlaceholder2 ? 'placeholder' : ''}">${m.t2}</span>
@@ -391,7 +424,6 @@
             </div>
         `;
     }
-
     function renderBracket() {
         processKnockoutLogic();
         const k = knockoutMatches;
